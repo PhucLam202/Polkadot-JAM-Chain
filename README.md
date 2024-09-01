@@ -1,4 +1,5 @@
 *Author*: Phuc Lam
+
 *Language*: Vietnamese
 
 # **I. JAM's Evolution from Polkadot**
@@ -53,9 +54,13 @@ Giờ hãy tìm hiểu thêm một ít về 2 cơ chế đồng thuận là **Sa
     - **Mục đích**: Safrole quản lý quá trình sản xuất khối. Nó kiểm soát cách các khối được tạo ra và ngăn chặn các nhánh (fork) bằng cách giới hạn các tác giả khối tiềm năng trong bất kỳ khoảng thời gian sáu giây nào chỉ còn một người giữ khóa xác thực.
     - Tạo khối: Safrole được thiết kế để đảm bảo rằng chỉ có một khối được sản xuất mỗi khoảng thời gian, giúp giảm thiểu khả năng nhiều khối (fork) được sản xuất đồng thời.
 
+⇒ đọc thêm về Safrole: [Learn Safrole on Polkadot Wiki](https://wiki.polkadot.network/docs/learn-safrole)
+
 - Grandpa Finality
     - **Mục đích**: Grandpa chịu trách nhiệm cho việc hoàn tất các khối. Nó đảm bảo rằng một khi một khối được thêm vào blockchain, nó sẽ vĩnh viễn là một phần của lịch sử blockchain.
     - Finality Protocol: Cơ chế này cung cấp mức độ tin cậy cao rằng một khối sẽ không bị đảo ngược, điều này rất quan trọng cho sự an toàn và độ tin cậy của blockchain.
+
+⇒ Đọc thêm về GRANDPA: [Grandpa Concensus](https://wiki.polkadot.network/docs/learn-consensus#finality-gadget-grandpa) 
 
 ### **2. Services**
 
@@ -160,34 +165,34 @@ JAM là một bước tiến lớn trong kiến trúc blockchain, nhưng đi kè
 
 Khả năng phục hồi (Resilience) là một yếu tố quan trọng đối với bất kỳ hệ thống blockchain nào, đặc biệt là trong môi trường phi tập trung của Web3. JAM được thiết kế để đạt được khả năng phục hồi cao thông qua việc kết hợp một số cơ chế bảo mật và khả năng phục hồi độc đáo.
 
-**1. Bảo mật mạng lưới:**
+### **1. Bảo mật mạng lưới:**
 
 - **Mã hóa:** JAM sử dụng mã hóa để bảo mật các giao tiếp giữa các node, giúp bảo vệ mạng lưới khỏi các cuộc tấn công mạng lưới như tấn công từ chối dịch vụ (DoS) và tấn công người trong cuộc (MITM).
 - **Entropy:** Cơ chế đồng thuận Safrole tạo ra một nhóm entropy có thể được sử dụng bởi các phần khác của giao thức, giúp tăng cường bảo mật và độ ngẫu nhiên cho hệ thống.
 
-**2. Khả năng phục hồi của chuỗi khối:**
+### **2. Khả năng phục hồi của chuỗi khối:**
 
 - **Cơ chế đồng thuận:** JAM sử dụng một cơ chế đồng thuận kết hợp giữa Safrole và Grandpa, giúp đảm bảo rằng các khối được thêm vào chuỗi một cách an toàn và không thể bị đảo ngược.
     - **Safrole:** Safrole kiểm soát quá trình sản xuất khối, giúp giảm thiểu khả năng nhiều khối (nhánh) được tạo ra đồng thời. Nó cũng tạo ra một nhóm entropy có thể được sử dụng bởi các phần khác của giao thức.
     - **Grandpa:** Grandpa chịu trách nhiệm cho việc hoàn thiện các khối, đảm bảo rằng một khi một khối được thêm vào blockchain, nó sẽ trở thành một phần vĩnh viễn của lịch sử blockchain.
 - **Mã hóa kinh tế:** JAM dựa vào các cơ chế mã hóa kinh tế để khuyến khích các node xác thực hành động trung thực và trừng phạt các hành động bất chính.
 
-**3. Bảo mật dữ liệu:**
+### **3. Bảo mật dữ liệu:**
 
 - **Merklization:** JAM sử dụng Merklization để tạo ra một bản sao lưu của dữ liệu trạng thái, giúp bảo vệ dữ liệu khỏi bị mất mát hoặc bị sửa đổi.
 - **Kiểm tra tính khả dụng:** Cơ chế kiểm tra tính khả dụng của dữ liệu (Data Availability) đảm bảo rằng dữ liệu được phân phối một cách an toàn và có thể được truy cập bởi tất cả các node.
 
-**4. Khả năng phục hồi của hệ thống:**
+### **4. Khả năng phục hồi của hệ thống:**
 
 - **Jam được thiết kế để hoạt động hiệu quả ngay cả khi có sự cố xảy ra với một số node trong mạng lưới.** Cơ chế đồng thuận của Jam đảm bảo rằng chuỗi khối vẫn có thể hoạt động ngay cả khi một số node bị lỗi hoặc bị tấn công.
 - **Jam có khả năng phục hồi cao (Resilience) bởi vì nó được thiết kế để chống lại các cuộc tấn công và lỗi kỹ thuật.** Các cơ chế bảo mật và khả năng phục hồi của Jam giúp đảm bảo rằng hệ thống có thể hoạt động ổn định và đáng tin cậy trong môi trường phi tập trung.
 
-**5. Khả năng phục hồi của các dịch vụ:**
+### **5. Khả năng phục hồi của các dịch vụ:**
 
 - **JAM được thiết kế để đảm bảo rằng các dịch vụ vẫn có thể hoạt động hiệu quả ngay cả khi có sự cố xảy ra với một số node trong mạng lưới.** Cơ chế đồng thuận của Jam đảm bảo rằng chuỗi khối vẫn có thể hoạt động ngay cả khi một số node bị lỗi hoặc bị tấn công.
 - **JAM có khả năng phục hồi cao (Resilience) bởi vì nó được thiết kế để chống lại các cuộc tấn công và lỗi kỹ thuật.** Các cơ chế bảo mật và khả năng phục hồi của Jam giúp đảm bảo rằng hệ thống có thể hoạt động ổn định và đáng tin cậy trong môi trường phi tập trung.
 
-**6. Khả năng phục hồi của các validator:**
+### **6. Khả năng phục hồi của các validator:**
 
 - **JAM được thiết kế để đảm bảo rằng các validator vẫn có thể hoạt động hiệu quả ngay cả khi có sự cố xảy ra với một số node trong mạng lưới.** Cơ chế đồng thuận của Jam đảm bảo rằng chuỗi khối vẫn có thể hoạt động ngay cả khi một số node bị lỗi hoặc bị tấn công.
 - **JAM có khả năng phục hồi cao (Resilience) bởi vì nó được thiết kế để chống lại các cuộc tấn công và lỗi kỹ thuật.** Các cơ chế bảo mật và khả năng phục hồi của Jam giúp đảm bảo rằng hệ thống có thể hoạt động ổn định và đáng tin cậy trong môi trường phi tập trung.
