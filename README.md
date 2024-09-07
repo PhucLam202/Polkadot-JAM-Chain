@@ -8,9 +8,9 @@
 
 ## What is JAM
 
-JAM, viết tắt của **Join-Accumulate Machine**, là một giao thức blockchain hoàn chỉnh và nhất quán, được thiết kế để kết hợp các yếu tố của cả Polkadot và Ethereum. JAM không chỉ là một thiết kế tiềm năng để kế thừa Relay Chain của Polkadot mà còn là một giao thức toàn diện cho môi trường đối tượng không cần quyền toàn cầu, tương tự như môi trường smart contract do Ethereum tiên phong.
+JAM, viết tắt của **Join-Accumulate Machine**, là một giao thức blockchain hoàn chỉnh và nhất quán, được thiết kế để kết hợp các yếu tố của cả Polkadot và Ethereum. JAM không chỉ là một thiết kế tiềm năng để kế thừa Relay Chain của Polkadot mà còn là một giao thức toàn diện cho môi trường đối tượng không cần quyền toàn cầu.
 
-Tên gọi "JAM" xuất phát từ CoreJAM, phiên bản đầu tiên và chưa hoàn thiện của giao thức này, được giới thiệu trong một RFC bởi Gavin Wood. CoreJAM lấy tên từ mô hình tính toán collect-refine-join-accumulate, là nền tảng của dịch vụ mà giao thức này hiện thực hóa. Tuy nhiên, JAM đã tiến xa hơn bằng cách cung cấp một giao thức blockchain hoàn chỉnh và nhất quán.
+Tên gọi "JAM" xuất phát từ CoreJAM, phiên bản đầu tiên và chưa hoàn thiện của giao thức này, được giới thiệu trong một RFC bởi Gavin Wood. CoreJAM lấy tên từ mô hình tính toán Collect-Refine-Join-Accumulate, là nền tảng của dịch vụ mà giao thức này hiện thực hóa. Tuy nhiên, JAM đã tiến xa hơn bằng cách cung cấp một giao thức blockchain hoàn chỉnh và nhất quán.
 
 JAM ra đời để giải quyết các hạn chế trong kiến trúc hiện tại của Polkadot, mở đường cho một hệ sinh thái mới với khả năng mở rộng, độ bền vững và tính tương tác tốt hơn, đồng thời vẫn giữ vững tính nhất quán của trạng thái toàn cầu.
 
@@ -54,13 +54,12 @@ Giờ hãy tìm hiểu thêm một ít về 2 cơ chế đồng thuận là **Sa
     - **Mục đích**: Safrole quản lý quá trình sản xuất khối. Nó kiểm soát cách các khối được tạo ra và ngăn chặn các nhánh (fork) bằng cách giới hạn các tác giả khối tiềm năng trong bất kỳ khoảng thời gian sáu giây nào chỉ còn một người giữ khóa xác thực.
     - Tạo khối: Safrole được thiết kế để đảm bảo rằng chỉ có một khối được sản xuất mỗi khoảng thời gian, giúp giảm thiểu khả năng nhiều khối (fork) được sản xuất đồng thời.
 
-⇒ đọc thêm về Safrole: [Learn Safrole on Polkadot Wiki](https://wiki.polkadot.network/docs/learn-safrole)
-
 - Grandpa Finality
     - **Mục đích**: Grandpa chịu trách nhiệm cho việc hoàn tất các khối. Nó đảm bảo rằng một khi một khối được thêm vào blockchain, nó sẽ vĩnh viễn là một phần của lịch sử blockchain.
     - Finality Protocol: Cơ chế này cung cấp mức độ tin cậy cao rằng một khối sẽ không bị đảo ngược, điều này rất quan trọng cho sự an toàn và độ tin cậy của blockchain.
-
-⇒ Đọc thêm về GRANDPA: [Grandpa Concensus](https://wiki.polkadot.network/docs/learn-consensus#finality-gadget-grandpa) 
+    
+    WASM thường gặp khó khăn trong quản lý ngăn xếp và xử lý điểm ngắt, nhưng RISC-V giải quyết vấn đề này bằng cách đặt ngăn xếp trong bộ nhớ, giúp xử lý tự nhiên mà không phức tạp thêm. PVM cũng cho tốc độ thực thi xuất sắc trên phần cứng thông thường như X64 và ARM, đồng thời cung cấp lợi thế về chi phí so với WASM.
+    
 
 ### **2. Services**
 
@@ -82,17 +81,15 @@ PVM dựa trên kiến trúc tập lệnh RISC-V (`Instruction Set Architecture`
 
 Bản thân PVM thể hiện sự đơn giản và bảo mật, có thể được cô lập (sandboxable) và cung cấp nhiều đảm bảo về việc thực thi. Nó có tính xác định, nhạy cảm với sự đồng thuận và thân thiện với việc tính toán chi phí (metering). Không giống như các máy ảo khác, PVM không phức tạp và không có nhiều quan điểm thiên vị.
 
-WASM thường gặp khó khăn trong quản lý ngăn xếp và xử lý điểm ngắt, nhưng RISC-V giải quyết vấn đề này bằng cách đặt ngăn xếp trong bộ nhớ, giúp xử lý tự nhiên mà không phức tạp thêm. PVM cũng cho tốc độ thực thi xuất sắc trên phần cứng thông thường như X64 và ARM, đồng thời cung cấp lợi thế về chi phí so với WASM.
-
 Việc tích hợp các điểm ngắt được hỗ trợ bởi RISC-V dự kiến sẽ thiết lập tiêu chuẩn mới cho mã hóa có khả năng mở rộng trên các nền tảng đa lõi như JAM, một xu hướng cần thiết để mở rộng các thuật toán blockchain và đồng thuận trong tương lai.
 
 ### **5. Synchronous Communication**
 
 Hàm `onTransfer` trong hệ thống JAM cũng là một hàm thay đổi trạng thái (stateful), cho phép nó sửa đổi trạng thái của các `Services`. Hàm này có khả năng kiểm tra trạng thái của các dịch vụ khác và thực hiện thay đổi đối với trạng thái của chính nó. Chức năng này tạo điều kiện thuận lợi cho việc giao tiếp giữa các dịch vụ, mặc dù theo cách thức bất đồng bộ (asynchronous).
 
-Không giống như nhiều Smart Contract khác, nơi các tương tác diễn ra đồng bộ (synchronously), trong JAM, các thành phần như Smart Contract hoặc dịch vụ tương tác với nhau theo cách bất đồng bộ (asynchronously). Messages và Token được gửi đi, và tại một thời điểm sau đó trong cùng một chu kỳ thực thi khoảng 6 giây, phía Services nhận sẽ xử lý chúng.
+Không giống như nhiều Smart Contract khác, nơi các tương tác diễn ra đồng bộ (synchronously), trong JAM, các thành phần như Smart Contract hoặc dịch vụ tương tác với nhau theo cách bất đồng bộ (asynchronously). Message và Token được gửi đi, và tại một thời điểm sau đó trong cùng một chu kỳ thực thi khoảng 6 giây, phía Services nhận sẽ xử lý chúng.
 
-- Không có phản hồi trực tiếp từ dịch vụ nhận; nếu cần phản hồi, dịch vụ gửi phải khởi tạo một giao dịch mới hoặc thay đổi trạng thái của mình sao cho dịch vụ nhận có thể hiểu và xử lý sau này.
+- Không có phản hồi trực tiếp từ dịch vụ nhận: nếu cần phản hồi, dịch vụ gửi phải khởi tạo một giao dịch mới hoặc thay đổi trạng thái của mình sao cho dịch vụ nhận có thể hiểu và xử lý sau này.
     - Điều này có nghĩa là hệ thống không cung cấp phản hồi ngay lập tức.
     - Nếu dịch vụ gửi cần phản hồi, nó phải thực hiện các hành động bổ sung, chẳng hạn như:
         - Tạo giao dịch mới.
@@ -110,7 +107,27 @@ Cả hàm `Accumulate` và `onTransfer` đều được thiết kế để thự
 
 **Kết nối đồng bộ** (Synchronous Communication) có thể được tích hợp vào JAM trong các trường hợp cụ thể, nhưng phần lớn hệ thống hoạt động dựa trên cơ chế bất đồng bộ để phù hợp với các yêu cầu về hiệu suất và tính mở rộng.
 
-Tham khảo thêm tại: [On Transfer Function](https://wiki.polkadot.network/docs/learn-jam-chain#on-transfer-function)
+### 6. Transactionless
+
+JAM, giới thiệu một khái niệm mới là transactionless. Khác với các block-chain truyền thống hoạt động dựa trên cơ chế chính là transaction. 
+
+Điều này có nghĩa là giao dịch transaction sẽ không diễn ra trực tiếp trong JAM. Thay vào đó, tất cả các hành động đều không cần ký giao dịch (permissionless) và trải qua một giai đoạn Refine.
+
+- Giai đoạn Refine trong giai đoạn này, các service sẽ tinh chỉnh trước dữ liệu đầu vào, biến đổi nó thành các báo cáo công việc bao gồm các kết quả công việc. Sau đó, những kết quả công việc này được chuyển lên chuỗi.
+
+Mặt dù nói là TRANSACTIONLESS thì trong JAM cũng có một vài thông tin cụ thể.**Có 5 loại dữ liệu để lưu :**
+
+- Guarantees
+- Assurances
+- Judgments
+- Preimages
+- Tickets
+
+Ba loại đầu tiên tạo thành một phần của khung bảo mật của chuỗi JAM. Guarantees và Assurances bao gồm các validator xác nhận tập thể rằng một kết quả công việc phản ánh chính xác kết quả của mục công việc tương ứng sau khi chuyển đổi qua hàm refine của dịch vụ.
+
+Judgments xảy ra khi tính toàn vẹn của một kết quả công việc được coi là không chắc chắn và một đa số lớn các validator xác nhận tính hợp lệ hoặc không hợp lệ của kết quả đó. Trong trường hợp này, một mục công việc không hợp lệ có thể đã được tích hợp vào trạng thái của dịch vụ và một rollback có thể cần phải xảy ra. Judgments phải xảy ra trong vòng một giờ kể từ khi gửi báo cáo công việc lên chuỗi, trong thời gian đó tính xác thực cuối cùng (finality) tạm thời bị tạm dừng.
+Preimages đại diện cho một tính năng được cung cấp bởi chuỗi JAM cho hàm refine. Trong khi hàm refine thường không có trạng thái (stateless), nó có thể thực hiện một hoạt động có trạng thái (stateful): tìm kiếm preimage của một hash. Tính năng này là khía cạnh duy nhất của hàm refine.
+Tickets đóng vai trò là các mục nhập ẩn danh vào cơ chế sản xuất khối. Chúng không được yêu cầu ngay lập tức để sản xuất khối; thay vào đó, hệ thống hoạt động hai epoch trước. Cơ chế này là một phần của thuật toán SAFROLE, một phiên bản được tinh chỉnh của thuật toán SASSAFRAS ban đầu.
 
 ---
 
@@ -196,3 +213,16 @@ Khả năng phục hồi (Resilience) là một yếu tố quan trọng đối v
 
 - **JAM được thiết kế để đảm bảo rằng các validator vẫn có thể hoạt động hiệu quả ngay cả khi có sự cố xảy ra với một số node trong mạng lưới.** Cơ chế đồng thuận của Jam đảm bảo rằng chuỗi khối vẫn có thể hoạt động ngay cả khi một số node bị lỗi hoặc bị tấn công.
 - **JAM có khả năng phục hồi cao (Resilience) bởi vì nó được thiết kế để chống lại các cuộc tấn công và lỗi kỹ thuật.** Các cơ chế bảo mật và khả năng phục hồi của Jam giúp đảm bảo rằng hệ thống có thể hoạt động ổn định và đáng tin cậy trong môi trường phi tập trung.
+
+# Reference
+
+Graypaper: [Graypaper.com](https://graypaper.com/)
+
+Polkadot Wiki: [Polkadot Wiki - Learn JAM chain](https://wiki.polkadot.network/docs/learn-jam-chain)
+
+- GRANDPA: [Learn Grandpa Concensus](https://wiki.polkadot.network/docs/learn-consensus#finality-gadget-grandpa)
+- Sanfrole: [Learn Safrole](https://wiki.polkadot.network/docs/learn-safrole)
+
+Gavin Wood on JAM A-Z:  [sub0 Asia 2024 keynote - Gavin Wood on JAM A-Z](https://www.youtube.com/watch?v=tdvqkKdFTlw)
+
+PVM : [Polkavm by koute](https://github.com/koute/polkavm)
