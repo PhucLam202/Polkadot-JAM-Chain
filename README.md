@@ -117,11 +117,7 @@ PolkaVM được thiết kế để hoạt động hiệu quả trên Substrate 
 | --- | --- | --- | --- |
 | Kiến trúc | Stack-based | Register-based | Register-based (dựa trên RISC-V) |
 | Mục đích | Chung, web, blockchain | Chung, nhúng, IoT, blockchain | Đặc biệt dành cho Substrate (Polkadot) |
-| Tốc độ Biên dịch | Thường được coi là chấp nhận được trong thực tế, nhưng vẫn chậm hơn PVM
-
-VD: thời gian biên dịch WASM là 10s  | N/A (không áp dụng cho kiến trúc do RISC-V phụ thuộc vào kiến trúc phần cứng) | Nhanh hơn WASM đáng kể (theo Document được đề ra của Gavin Wood , có thể lên đến 300 lần)
-
-VD: thời gian biên dịch **PVM** là 0.5s  |
+| Tốc độ Biên dịch | Thường được coi là chấp nhận được trong thực tế, nhưng vẫn chậm hơn PVM | N/A (không áp dụng cho kiến trúc do RISC-V phụ thuộc vào kiến trúc phần cứng) | Nhanh hơn WASM đáng kể (theo Document được đề ra của Gavin Wood , có thể lên đến 300 lần) |
 | Hiệu suất | Tốt (gần native code) | Cao (trong lý thuyết, phụ thuộc vào phương thức triển khai) | Tương đương Wasmtime (một runtime WASM), nhanh hơn WASM trong biên dịch |
 | Tính Xác Định | Hướng tới, nhưng có thể gặp thách thức (floating-point, thư viện hệ thống, bộ nhớ dùng chung) | Cao (phụ thuộc vào triển khai và mã nguồn) | Cao |
 | Bảo mật | Sanbox | Cơ chế bảo mật phần cứng (tùy thuộc) | Enhanced Sanbox (seccomp, tiến trình riêng) |
@@ -131,8 +127,7 @@ VD: thời gian biên dịch **PVM** là 0.5s  |
 | Ưu điểm | Hỗ trợ rộng rãi, cộng đồng lớn, nhiều công cụ và thư viện | Hiệu suất, linh hoạt | Tốc độ biên dịch cực nhanh, bảo mật, tối ưu cho Substrate |
 | Nhược điểm | Hiệu suất hạn chế trong Substrate, tiềm ẩn vấn đề về tính xác định | Phụ thuộc vào triển khai cụ thể | Đang phát triển, chưa được kiểm chứng rộng rãi, ít ngôn ngữ được hỗ trợ hơn |
 
----
-
+VD: ***thời gian biên dịch WASM là 10s, thì ở PVM sẽ là 0.5s***
 # **V. JAM Architecture: Breaking it Down**
 
 ## **Core Components**
