@@ -6,7 +6,7 @@
 
 ---
 
-## What is JAM
+## What is JAM ?
 
 JAM, viết tắt của **Join-Accumulate Machine**, là một giao thức blockchain hoàn chỉnh và nhất quán, được thiết kế để kết hợp các yếu tố của cả Polkadot và Ethereum. JAM không chỉ là một thiết kế tiềm năng để kế thừa Relay Chain của Polkadot mà còn là một giao thức toàn diện cho môi trường đối tượng không cần quyền toàn cầu.
 
@@ -31,14 +31,109 @@ JAM sẽ được giới thiệu như một bản nâng cấp toàn diện. Mộ
     - Polkadot sử dụng WebAssembly (WASM) để thực thi các hợp đồng thông minh. Dù đảm bảo an toàn, WASM có những hạn chế về tốc độ thực thi, đặc biệt là đối với các tính toán phức tạp.
     - JAM thay thế WASM bằng PolkaVM, một máy ảo có thể tùy chỉnh được thiết kế đặc biệt cho việc thực thi trên mạng lưới blockchain. PolkaVM hứa hẹn mang lại tốc độ thực thi nhanh hơn, bảo mật cao hơn, và linh hoạt hơn trong việc hỗ trợ các ứng dụng đòi hỏi cao hơn.
 - **Synchronous Communication:**
-    - Giao thức giao tiếp XCM của Polkadot là không đồng bộ, nghĩa là các thông điệp có thể bị trễ hoặc mất.
-    - JAM giới thiệu khái niệm ngược lại với Polkadot là giao tiếp đồng bộ, đảm bảo rằng các thông điệp được truyền tải kịp thời và đáng tin cậy. Việc chuyển đổi này giúp cho phép các ứng dụng phức tạp và liên kết chặt chẽ hơn.
+    - Giao thức giao tiếp XCM của Polkadot giao tiếp một cách bất đồng bộ (asynchronously) với nhau, điều đó có nghĩa là các thông điệp có thể bị trễ hoặc mất trong quá trình truyền tải.
+    - JAM giới thiệu khái niệm ngược lại với Polkadot là giao tiếp đồng bộ (synchronously), điều đó đảm bảo rằng các thông điệp được truyền tải kịp thời với độ tin cậy cao. Việc chuyển đổi này giúp cho phép các ứng dụng phức tạp sẽ có được tính liên kết chặt chẽ hơn so với XCM.
 - **Security:**
-    - PolkaVM, với thiết kế tùy chỉnh và tập trung vào tối ưu hóa dành riêng cho blockchain, được kỳ vọng sẽ tăng cường bảo mật so với WASM.
+    - PolkaVM, với thiết kế tùy chỉnh và tập trung vào tối ưu hóa dành riêng cho blockchain, được kỳ vọng sẽ tăng cường bảo mật hơn so với WASM truyền thống.
 
 ---
 
-# **II. JAM Architecture: Breaking it Down**
+# II. WASM
+
+## What is WebAssembly?
+
+**WebAssembly** là một tiêu chuẩn mở, được thiết kế chặt chẽ và có hệ sinh thái mạnh mẽ Wasm là thành quả của sự hợp tác giữa những ông lớn công nghệ sở hữu trình duyệt phổ biến nhất hiện nay gồm Microsoft, Apple, Google, Mozilla,…, với nhiều máy ảo chất lượng cao sẵn có, như `Wasmtime`, `Wasmer`, `Wasmi`, `WAVM`, `wazero`, `Wasm3`, và `WasmEdge`. Những máy ảo này giúp Wasm trở thành nền tảng phổ biến và hỗ trợ thực thi mã trên nhiều nền tảng với hiệu suất cao. Đặc biệt, Wasm được viết bằng ngôn ngữ Rust bởi đội ngũ kỹ sư hàng đầu trong lĩnh vực máy ảo, mang đến độ an toàn và hiệu suất cao nhờ vào việc:
+
+- **Biên dịch mã Wasm thành mã máy** để thực thi nhanh chóng.
+- **Độ bảo mật cao** do được kiểm thử và `fuzzing` kỹ lưỡng.
+- **Thời gian biên dịch nhanh** và khả năng phát triển nhanh chóng nhờ vào hệ thống công cụ và thư viện của Rust.
+
+## How WASM Work?
+
+Với WebAssembly, mã nguồn (source code) sẽ được viết bằng các ngôn ngữ lập trình bậc cao như C/C++, Rust,… sau đó biên dịch về định dạng nhị phân (.wasm). Những file này sẽ được nạp vào trình duyệt rồi nhờ các JavaScript Engine biên dịch tạo ra mã máy để thực thi.
+
+![WebAssembly-2.jpg](./image/WebAssembly-2.jpg)
+
+## The Limitations of WebAssembly in Polkadot
+
+- **Không đảm bảo tính xác định 100%**: Wasm không thể đảm bảo hoàn toàn tính **determinism** do **guest stack** và **host stack** được chia sẻ, gây ra các khác biệt nhỏ trong kết quả tính toán giữa các nút. Đây là một bất lợi lớn cho các hệ thống yêu cầu tính nhất quán tuyệt đối như Polkadot.
+- **Không có giới hạn số lượng hàm lồng nhau**: Wasm cho phép gọi hàm đệ quy và lồng nhau không giới hạn, có thể dẫn đến tình trạng quá tải ngăn xếp và làm giảm hiệu suất khi triển khai trên quy mô lớn.
+- **Thời gian biên dịch không đảm bảo O(n)**: Quá trình biên dịch mã trong Wasm không đảm bảo tốc độ tuyến tính, khiến quá trình biên dịch có thể bị chậm. Trong hệ thống Polkadot, PVF cần pre-check để xác minh mã có thể được chấp nhận, nhưng điều này không luôn luôn đảm bảo được tốc độ mong muốn.
+- **Thiếu các tính năng cần thiết**:
+    - **Suspend + Resume** (tạm dừng và tiếp tục): Wasm thiếu hỗ trợ cho việc [**suspend + resume**](https://github.com/WebAssembly/design/issues/1294) của các chương trình, điều này quan trọng trong các ứng dụng phức tạp cần kiểm soát luồng thực thi.
+    - **Gas Metering**: Wasm thiếu hệ thống tính phí theo chuẩn cho các ứng dụng blockchain, điều này gây khó khăn trong việc kiểm soát và hạn chế mức tiêu thụ tài nguyên.
+    - **Dynamic Page Fault Handling**: Thiếu khả năng xử lý **dynamic guest page fault** có thể gây ảnh hưởng đến khả năng mở rộng và triển khai trong môi trường blockchain với yêu cầu cao về tính năng động của tài nguyên.
+
+## Solution for Polkadot
+
+Để đáp ứng các nhu cầu đặc thù của blockchain, Polkadot cần một kiến trúc tập lệnh (ISA) thay thế, với các đặc tính lý tưởng yều câu sau:
+
+- Thiết kế đơn giản, dễ triển khai.
+- Tiêu chuẩn ổn định và duy trì lâu dài.
+- Được hỗ trợ rộng rãi và có công cụ phát triển tốt.
+- Không ép buộc các tính năng không cần thiết, nhằm tập trung tối đa vào hiệu suất và tính bảo mật.
+
+---
+
+# **III. RISC-V**
+
+Trước khi đi vào các phần chính thì ta nên điểm qua một ít về khái niệm về RISC-V. Đây là một kiến trúc lõi có ảnh hưởng trực tiếp đến PVM sẽ được đề cập bên dưới 
+
+## **What is RISC-V ?**
+
+Trước khi đi vào các phần chính, hãy cùng xem qua RISC-V, một kiến trúc quan trọng dựa trên nguyên tắc của kiến trúc tập lệnh rút gọn (RISC), với đặc tính mã nguồn mở, tự do sử dụng và tùy chỉnh. Điều này khác biệt so với các kiến trúc tập lệnh như x86 hoặc ARM, vốn được kiểm soát bởi các nhà cung cấp cụ thể, trong khi [RISC-V](https://www.synopsys.com/glossary/what-is-risc-v.html) cho phép mọi người tự do đóng góp và phát triển.
+
+### Key Features of RISC-V
+
+- **Modularity (Tính mô-đun):** RISC-V có một tập lệnh cơ sở nhỏ gọn và hiệu quả, cùng khả năng mở rộng linh hoạt. Điều này cho phép các hệ thống có thể tùy chỉnh tập lệnh thông qua các phần mở rộng như **Compressed Instructions (C)** và **Atomic Instructions (A)**, giúp tối ưu hóa hiệu suất và nâng cao tính bảo mật tùy theo nhu cầu cụ thể của từng ứng dụng.
+    - **Compressed Instructions (C):** Phần mở rộng này cho phép mã lệnh được nén lại, giảm kích thước của chương trình và tiết kiệm bộ nhớ. Tập lệnh nén giúp thay thế các lệnh dài 32-bit bằng các lệnh ngắn hơn 16-bit, nhờ đó giảm kích thước bộ nhớ yêu cầu và cải thiện hiệu suất sử dụng bộ nhớ đệm.
+        - ⇒ Tham khảo thêm: [Compressed Instructions](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-118.pdf) (trang 89)
+    - **Atomic Instructions (A):** Phần mở rộng này hỗ trợ các thao tác nguyên tử, rất hữu ích trong việc quản lý truy cập đồng thời vào bộ nhớ trên các hệ thống đa nhân, giúp cải thiện tính nhất quán và hiệu quả trong các thao tác đòi hỏi tính đồng thời cao.
+        - ⇒ Tham khảo thêm: [Atomic Instructions](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-118.pdf) (trang 45)
+- **Simplicity (Tính đơn giản):** Sự đơn giản trong thiết kế của RISC-V mang lại nhiều lợi ích cho các hệ thống ứng dụng, giúp giảm chi phí và thời gian phát triển phần cứng. Đặc điểm này còn cho phép các kỹ sư xác minh chính xác tính đúng đắn của hệ thống, tăng cường độ tin cậy và an toàn cho các ứng dụng.
+- **Extensibility (Khả năng mở rộng):** Khả năng mở rộng của RISC-V giúp nó dễ dàng thích ứng với các thay đổi công nghệ trong tương lai. Các phần mở rộng được chuẩn hóa để đảm bảo tính tương thích và tránh tình trạng phân mảnh, giúp các hệ thống triển khai dựa trên RISC-V dễ dàng nâng cấp và tích hợp tính năng mới. Tính mở và minh bạch của quy trình này khuyến khích sự tham gia của cộng đồng, thúc đẩy sự đổi mới liên tục.
+- **Open Standard (Tiêu chuẩn mở):** Tính mở của RISC-V thúc đẩy sự hợp tác và ngăn chặn sự phụ thuộc vào nhà cung cấp, tạo ra một hệ sinh thái phát triển phần cứng và phần mềm phong phú, năng động và đa dạng.
+
+---
+
+# IV. Comparison between PolkaVM and WASM
+
+**Tốc độ Biên Dịch**: PolkaVM được tuyên bố sẽ nhanh hơn 300 lần so với Wasmtime, điều này giúp tối ưu hóa thông lượng trong blockchain, trong khi WASM có tốc độ biên dịch chậm hơn, có thể gây hạn chế trong quá trình phát triển nhanh.
+
+**Bytecode**:  PolkaVM sử dụng bytecode tùy chỉnh, được thiết kế cho tốc độ và hiệu quả, giúp chuyển đổi lệnh 1-đối-1 thành mã gốc, tối ưu hóa cho blockchain. WASM không hoàn toàn phù hợp với kịch bản này và có thể dẫn đến tiêu tốn tài nguyên.
+
+**Lazy Execution**: PolkaVM hỗ trợ thực thi lười (lazy execution), giúp giảm tải tài nguyên. WASM thường yêu cầu thực thi tất cả mã cần thiết ngay từ đầu, có thể kém hiệu quả trong môi trường tài nguyên giới hạn.
+
+**Hiệu Suất & Xác Định**: PolkaVM đạt tốc độ thực thi tương đương với Wasmtime và nhanh hơn trong biên dịch gấp 320 lần, đồng thời đảm bảo tính xác định 100%, rất quan trọng để duy trì nhất quán giữa các nút trong blockchain.
+
+**Bảo mật**: PVM cung cấp môi trường sandboxing tiên tiến với các biện pháp bảo mật chặt chẽ (như seccomp), đảm bảo tính cách ly cao hơn cho các ứng dụng phân tán so với WASM.
+
+**Ngôn Ngữ**: PolkaVM hỗ trợ các ngôn ngữ C, C++, và Rust, mở rộng tính linh hoạt so với các ngôn ngữ tương thích WASM truyền thống, giúp dễ dàng tích hợp vào hệ sinh thái blockchain hiện có.
+
+**Tương Thích Với Substrate:**
+PolkaVM được thiết kế để hoạt động hiệu quả trên Substrate và chạy Rococo trên mạng thử nghiệm của Polkadot. Trong khi WASM cũng có mặt trong Substrate, PolkaVM tối ưu hóa cho nhu cầu blockchain cụ thể của Polkadot hơn.
+
+| **Tính năng** | **WASM** | **RISC-V** | **PVM (PolkaVM)** |
+| --- | --- | --- | --- |
+| Kiến trúc | Stack-based | Register-based | Register-based (dựa trên RISC-V) |
+| Mục đích | Chung, web, blockchain | Chung, nhúng, IoT, blockchain | Đặc biệt dành cho Substrate (Polkadot) |
+| Tốc độ Biên dịch | Thường được coi là chấp nhận được trong thực tế, nhưng vẫn chậm hơn PVM
+
+VD: thời gian biên dịch WASM là 10s  | N/A (không áp dụng cho kiến trúc do RISC-V phụ thuộc vào kiến trúc phần cứng) | Nhanh hơn WASM đáng kể (theo Document được đề ra của Gavin Wood , có thể lên đến 300 lần)
+
+VD: thời gian biên dịch **PVM** là 0.5s  |
+| Hiệu suất | Tốt (gần native code) | Cao (trong lý thuyết, phụ thuộc vào phương thức triển khai) | Tương đương Wasmtime (một runtime WASM), nhanh hơn WASM trong biên dịch |
+| Tính Xác Định | Hướng tới, nhưng có thể gặp thách thức (floating-point, thư viện hệ thống, bộ nhớ dùng chung) | Cao (phụ thuộc vào triển khai và mã nguồn) | Cao |
+| Bảo mật | Sanbox | Cơ chế bảo mật phần cứng (tùy thuộc) | Enhanced Sanbox (seccomp, tiến trình riêng) |
+| Ngôn ngữ | C/C++, Rust, AssemblyScript, Go, C#, Swift, D, Zig, Kotlin/Native, và nhiều ngôn ngữ khác | C/C++, Rust, Go, Python, Java, và nhiều ngôn ngữ khác | C, C++, Rust |
+| Tích hợp Substrate | Có, nhưng không tối ưu | N/A | Tối ưu, đang trong quá trình thực thi và thử nghiệm |
+| Độ tăng trưởng | Cao, được sử dụng một cách rộng rãi (hỗ trợ bởi nhiều trình duyệt, công cụ, cộng đồng lớn) | Cao | Thử nghiệm, đang trong quá trình phát triển |
+| Ưu điểm | Hỗ trợ rộng rãi, cộng đồng lớn, nhiều công cụ và thư viện | Hiệu suất, linh hoạt | Tốc độ biên dịch cực nhanh, bảo mật, tối ưu cho Substrate |
+| Nhược điểm | Hiệu suất hạn chế trong Substrate, tiềm ẩn vấn đề về tính xác định | Phụ thuộc vào triển khai cụ thể | Đang phát triển, chưa được kiểm chứng rộng rãi, ít ngôn ngữ được hỗ trợ hơn |
+
+---
+
+# **V. JAM Architecture: Breaking it Down**
 
 ## **Core Components**
 
@@ -46,44 +141,85 @@ Core Components là những khối xây dựng nền tảng của kiến trúc J
 
 ### **1. Consensus Mechanisms**
 
-JAM chain sử dụng sự kết hợp giữa hai cơ chế đồng thuận là Safrole và Grandpa để quản lý cả việc tạo và hoàn thiện các block trong hệ sinh thái. Safrole đảm bảo rằng các khối được sản xuất một cách có trật tự, trong khi Grandpa hoàn thiện chúng, đảm bảo rằng chúng trở thành một phần hoànn thiện và hiện hữu trong lịch sử của block chain.
+JAM chain sử dụng sự kết hợp giữa hai cơ chế đồng thuận là Safrole và Grandpa để quản lý cả việc tạo và hoàn thiện các block trong hệ sinh thái. Safrole đảm bảo rằng các khối được sản xuất một cách có trật tự, trong khi Grandpa hoàn thiện chúng, đảm bảo rằng chúng trở thành một phần hoàn thiện và hiện hữu trong lịch sử của blockchain.
 
-Giờ hãy tìm hiểu thêm một ít về 2 cơ chế đồng thuận là **Safrole và Grandpa**
+### **Safrole Protocol**
 
-- Safrole Protocol
-    - **Mục đích**: Safrole quản lý quá trình sản xuất khối. Nó kiểm soát cách các khối được tạo ra và ngăn chặn các nhánh (fork) bằng cách giới hạn các tác giả khối tiềm năng trong bất kỳ khoảng thời gian sáu giây nào chỉ còn một người giữ khóa xác thực.
-    - Tạo khối: Safrole được thiết kế để đảm bảo rằng chỉ có một khối được sản xuất mỗi khoảng thời gian, giúp giảm thiểu khả năng nhiều khối (fork) được sản xuất đồng thời.
+- **Mục đích**: Safrole quản lý quá trình sản xuất khối. Nó kiểm soát cách các khối được tạo ra và ngăn chặn các nhánh (fork) bằng cách giới hạn các tác giả khối tiềm năng trong bất kỳ khoảng thời gian sáu giây nào chỉ còn một người giữ khóa xác thực.
+- **Tạo khối**: Safrole được thiết kế để đảm bảo rằng chỉ có một khối được sản xuất mỗi khoảng thời gian, giúp giảm thiểu khả năng nhiều khối (fork) được sản xuất đồng thời.
 
-- Grandpa Finality
-    - **Mục đích**: Grandpa chịu trách nhiệm cho việc hoàn tất các khối. Nó đảm bảo rằng một khi một khối được thêm vào blockchain, nó sẽ vĩnh viễn là một phần của lịch sử blockchain.
-    - Finality Protocol: Cơ chế này cung cấp mức độ tin cậy cao rằng một khối sẽ không bị đảo ngược, điều này rất quan trọng cho sự an toàn và độ tin cậy của blockchain.
-    
-    WASM thường gặp khó khăn trong quản lý ngăn xếp và xử lý điểm ngắt, nhưng RISC-V giải quyết vấn đề này bằng cách đặt ngăn xếp trong bộ nhớ, giúp xử lý tự nhiên mà không phức tạp thêm. PVM cũng cho tốc độ thực thi xuất sắc trên phần cứng thông thường như X64 và ARM, đồng thời cung cấp lợi thế về chi phí so với WASM.
-    
+      ⇒ Tham khảo thêm: [Safrole](https://wiki.polkadot.network/docs/learn-safrole)
+
+### **Grandpa Finality**
+
+- **Mục đích**: Grandpa chịu trách nhiệm cho việc hoàn tất các khối. Nó đảm bảo rằng một khi một khối được thêm vào blockchain, nó sẽ vĩnh viễn là một phần của lịch sử blockchain.
+- **Finality Protocol**: Cơ chế này cung cấp mức độ tin cậy cao rằng một khối sẽ không bị đảo ngược, điều này rất quan trọng cho sự an toàn và độ tin cậy của blockchain.
+
+      ⇒ Tham khảo thêm: [GRANDPA](https://wiki.polkadot.network/docs/learn-consensus#finality-gadget-grandpa)
+
+### **Hybrid Consensus trong Polkadot**
+
+Polkadot sử dụng cơ chế đồng thuận lai, kết hợp giữa BABE và GRANDPA, để đảm bảo tính nhất quán và an toàn của mạng lưới.
+
+- **BABE (Blind Assignment for Blockchain Extension)**: Là cơ chế sản xuất block, sử dụng hàm ngẫu nhiên có thể xác minh (VRF) để chỉ định các validator cho các slot trong mỗi epoch. Điều này đảm bảo rằng các block được sản xuất liên tục và có tính xác suất.
+- **GRANDPA (GHOST-based Recursive Ancestor Deriving Prefix Agreement)**: Là cơ chế hoàn thiện block, cung cấp một cơ chế bỏ phiếu cho các chuỗi block. GRANDPA đảm bảo rằng một khi một block được hoàn thiện, nó sẽ không thể bị đảo ngược, cung cấp tính hoàn thiện có thể chứng minh được.
+
+Cơ chế đồng thuận lai này cho phép Polkadot đạt được cả tính xác suất và tính hoàn thiện có thể chứng minh được, giúp mạng lưới hoạt động hiệu quả và an toàn.
+
+![GRuM9LiaYAA9Fsb.jpg](./image/ReychainHybridConensus.jpg)
+
+⇒ Tham khảo thêm: [Hybrid Consensus](https://x.com/openguildwtf/status/1809203505649037391)
 
 ### **2. Services**
 
-Dịch vụ JAM được chia thành ba điểm truy cập riêng biệt, mỗi điểm truy cập chịu trách nhiệm cho một loại hoạt động cụ thể:
+Dịch vụ JAM được chia thành nhiều thành phần, mỗi thành phần chịu trách nhiệm cho một hoạt động cụ thể liên quan đến việc xử lý và tích lũy dữ liệu. Các thành phần chính bao gồm:
 
-- **Refine:** Đây là hàm thực hiện các tính toán hầu như không thay đổi trạng thái (stateless). Hàm này định nghĩa quá trình biến đổi cho rollup (rollup) của một dịch vụ cụ thể. Refine xử lý các work item (work item), là đầu vào của dịch vụ, và tạo ra work result (work result), là đầu ra của dịch vụ đó. Refine thường được thực hiện ngoài chuỗi (off-chain), trong môi trường "trong lõi" (in-core).
-- **Accumulate:** Đây là hàm nhận đầu ra từ Refine (work result) và tích hợp nó vào trạng thái tổng thể của dịch vụ. Accumulate tích hợp các work report (work report), là kết quả của nhiều work item, vào trạng thái dịch vụ. Quá trình này thường được thực hiện trên chuỗi (on-chain).
-- **OnTransfer:** Hàm này xử lý thông tin đến từ các dịch vụ khác. Hàm này xử lý các giao dịch chuyển token giữa các dịch vụ khác nhau, đảm bảo rằng số dư chính xác được duy trì. Hàm này cũng thường được thực hiện trên chuỗi (on-chain).
+- **Refine**: Đây là thành phần thực hiện các tính toán không thay đổi trạng thái (stateless). Nhiệm vụ của **Refine** là xử lý các "work item" (yếu tố công việc), biến chúng thành "work result" (kết quả công việc). Quá trình này diễn ra ngoài chuỗi (off-chain) trong môi trường nội bộ (in-core). **Refine** hoạt động trong môi trường an toàn, có khả năng bị dừng nếu vượt quá giới hạn tài nguyên. Nếu gặp lỗi như **Timeout** hoặc **Panic**, các "work item" sẽ bị đánh dấu là không hợp lệ.
+    
+    ⇒ Tham khảo thêm: [Refine](https://wiki.polkadot.network/docs/learn-jam-chain#refine-function)
+    
+- **Accumulate**: Thành phần này nhận đầu ra từ **Refine** (work result) và tích hợp chúng vào trạng thái tổng thể của dịch vụ. **Accumulate** xử lý trên chuỗi (on-chain) và đảm bảo tính hợp lệ cũng như đồng bộ của các kết quả từ nhiều "work item". Nó cũng kiểm soát tài nguyên (weight) để tránh việc tiêu tốn quá nhiều tài nguyên khi tích hợp các báo cáo công việc.
+    
+    ⇒ Tham khảo thêm: [Accumulate](https://wiki.polkadot.network/docs/learn-jam-chain#accumulate-function) 
+    
+- **OnTransfer**: Thành phần này xử lý việc chuyển giao thông tin và tài nguyên giữa các dịch vụ. **OnTransfer** chịu trách nhiệm quản lý các giao dịch token giữa các dịch vụ khác nhau, đảm bảo rằng số dư luôn chính xác. Quá trình này cũng được thực thi trên chuỗi (on-chain) để đảm bảo tính bảo mật và minh bạch của các giao dịch.
+    
+    ⇒ Tham khảo thêm: [OnTransfer](https://wiki.polkadot.network/docs/learn-jam-chain#on-transfer-function)
+    
+- **Join-Accumulate**: Đây là một giai đoạn đồng bộ, tổng hợp các kết quả từ nhiều lõi (cores) khác nhau trong quá trình **Refine**. **Join-Accumulate** đảm bảo rằng các phần việc không xung đột với nhau và kết quả cuối cùng được kết hợp thành một trạng thái thống nhất, hợp lệ.
+- **Authorization (Xác thực quyền hạn)**: Mỗi "Work Package" cần được xác thực bởi một **Authorizer** trước khi được xử lý. **Authorizer** đảm bảo rằng các công việc được ủy quyền và hợp lệ. Nếu một gói công việc không được xác thực, nó sẽ không được xử lý.
+![refine-accumulate-376dcd569f7a4b6f1ed20798f522bd0e.png](./image/ServiceJamCore1.png)
 
-### **4. PolkaVM**
+---
+![refine-accumulate-376dcd569f7a4b6f1ed20798f522bd0e.png](./image/ServiceJamCore2.png)
 
-Polkadot Virtual Machine (PVM) là một máy ảo được thiết kế cho mạng lưới Polkadot. Nó là một phần quan trọng trong JAM (Join-Accumulate Machine), một giao thức blockchain được Gavin Wood đề xuất và được sử dụng để thực hiện các smart contract trên mạng lưới Polkadot.
+---
+![refine-accumulate-376dcd569f7a4b6f1ed20798f522bd0e.png](./image/ServiceJamCore3.png)
 
-PVM dựa trên kiến trúc tập lệnh RISC-V (`Instruction Set Architecture`), nổi tiếng với sự đơn giản và đa năng. RISC-V ISA mang lại nhiều lợi ích:
+---
+![refine-accumulate-376dcd569f7a4b6f1ed20798f522bd0e.png](./image/ServiceJamCore.png)
 
-- **Sandboxing**: PVM có khả năng cô lập, đảm bảo tính bảo mật cao trong quá trình thực thi.
-- **Deterministic Execution**: PVM đảm bảo tính xác định trong quá trình thực thi, đồng nghĩa với việc kết quả sẽ luôn giống nhau với cùng một tập đầu vào.
-- **Performance Optimization**: PVM tối ưu hóa hiệu suất với khả năng chuyển đổi dễ dàng giữa các định dạng phần cứng phổ biến như x86, x64 và ARM. Nó cũng được hỗ trợ tốt bởi các công cụ như LLVM.
+Tham khảo thêm tại: [Polkadot Forum](https://forum.polkadot.network/t/announcing-polkavm-a-new-risc-v-based-vm-for-smart-contracts-and-possibly-more/3811) 
 
-Bản thân PVM thể hiện sự đơn giản và bảo mật, có thể được cô lập (sandboxable) và cung cấp nhiều đảm bảo về việc thực thi. Nó có tính xác định, nhạy cảm với sự đồng thuận và thân thiện với việc tính toán chi phí (metering). Không giống như các máy ảo khác, PVM không phức tạp và không có nhiều quan điểm thiên vị.
+### **3. PolkaVM**
 
-Việc tích hợp các điểm ngắt được hỗ trợ bởi RISC-V dự kiến sẽ thiết lập tiêu chuẩn mới cho mã hóa có khả năng mở rộng trên các nền tảng đa lõi như JAM, một xu hướng cần thiết để mở rộng các thuật toán blockchain và đồng thuận trong tương lai.
+**Polkadot Virtual Machine (PVM)** là một máy ảo được thiết kế đặc biệt cho mạng lưới Polkadot, đóng vai trò quan trọng trong **Join-Accumulate Machine (JAM)**, một giao thức blockchain được Gavin Wood đề xuất. PVM cho phép thực hiện các smart contract trên Polkadot với hiệu suất và bảo mật cao.
 
-### **5. Synchronous Communication**
+Dựa trên kiến trúc tập lệnh **RISC-V**, PVM tận dụng những lợi thế nổi bật của ISA này, bao gồm:
+
+- **Sandboxing:** PVM có khả năng cô lập quá trình thực thi, đảm bảo tính bảo mật cao cho các smart contract, giúp ngăn chặn các lỗi và tấn công từ bên ngoài.
+- **Deterministic Execution:** PVM đảm bảo rằng kết quả của mỗi lần thực thi sẽ giống nhau cho cùng một tập đầu vào, điều này quan trọng trong việc duy trì tính nhất quán và tin cậy trong các giao dịch blockchain.
+- **Performance Optimization:** PVM tối ưu hóa hiệu suất với khả năng chuyển đổi linh hoạt giữa các định dạng phần cứng phổ biến như x86, x64 và ARM. Điều này không chỉ cải thiện tốc độ thực thi mà còn giảm thiểu chi phí vận hành nhờ vào việc sử dụng tốt các công cụ như LLVM.
+
+Bản thân PVM thể hiện tính đơn giản, bảo mật và khả năng mở rộng cao. Nó không chỉ có thể được cô lập (sandboxable) mà còn cung cấp nhiều đảm bảo về việc thực thi, tính xác định và thân thiện với việc tính toán chi phí (metering). Khác với các máy ảo khác, PVM được thiết kế để đơn giản và không thiên vị, điều này giúp giảm độ phức tạp trong phát triển và sử dụng.
+
+Việc tích hợp các điểm ngắt được hỗ trợ bởi **RISC-V** dự kiến sẽ thiết lập tiêu chuẩn mới cho mã hóa có khả năng mở rộng trên các nền tảng đa lõi như **JAM**. Đây là một xu hướng cần thiết để mở rộng các thuật toán blockchain và đồng thuận trong tương lai, giúp **PolkaVM** duy trì sự phát triển và thích ứng với những thay đổi công nghệ.
+
+***So sánh với WebAssembly (WASM)***
+
+PolkaVM mang lại hiệu suất vượt trội trong bối cảnh blockchain so với WebAssembly (WASM). Cụ thể, trong khi PolkaVM cung cấp tốc độ biên dịch nhanh gấp 300 lần so với Wasmtime và khả năng thực thi mạnh mẽ, WASM chủ yếu được tối ưu hóa cho các ứng dụng web và không có tính năng sandboxing mạnh mẽ như PolkaVM. Điều này khiến PolkaVM trở thành lựa chọn lý tưởng cho các dự án blockchain cần tốc độ và bảo mật cao hơn.
+
+### **4. Synchronous Communication**
 
 Hàm `onTransfer` trong hệ thống JAM cũng là một hàm thay đổi trạng thái (stateful), cho phép nó sửa đổi trạng thái của các `Services`. Hàm này có khả năng kiểm tra trạng thái của các dịch vụ khác và thực hiện thay đổi đối với trạng thái của chính nó. Chức năng này tạo điều kiện thuận lợi cho việc giao tiếp giữa các dịch vụ, mặc dù theo cách thức bất đồng bộ (asynchronous).
 
@@ -107,7 +243,7 @@ Cả hàm `Accumulate` và `onTransfer` đều được thiết kế để thự
 
 **Kết nối đồng bộ** (Synchronous Communication) có thể được tích hợp vào JAM trong các trường hợp cụ thể, nhưng phần lớn hệ thống hoạt động dựa trên cơ chế bất đồng bộ để phù hợp với các yêu cầu về hiệu suất và tính mở rộng.
 
-### 6. Transactionless
+### 5. Transactionless
 
 JAM, giới thiệu một khái niệm mới là transactionless. Khác với các block-chain truyền thống hoạt động dựa trên cơ chế chính là transaction. 
 
@@ -131,7 +267,7 @@ Tickets đóng vai trò là các mục nhập ẩn danh vào cơ chế sản xu�
 
 ---
 
-# III. **Networking**
+# VI. **Networking**
 
 Jam được thiết kế như một hệ thống phân tán, nơi nhiều node kết nối và giao tiếp với nhau qua một mạng lưới. Mạng lưới này đóng vai trò quan trọng trong việc đảm bảo sự đồng bộ hóa trạng thái và hoạt động hiệu quả của hệ thống.
 
@@ -140,7 +276,7 @@ Jam được thiết kế như một hệ thống phân tán, nơi nhiều node 
 
 ---
 
-# **IV. Advantages and Potential of JAM**
+# **VII. Advantages and Potential of JAM**
 
 JAM, với kiến trúc sáng tạo và các tính năng bảo mật tiên tiến, không chỉ mang lại khả năng mở rộng và hiệu suất vượt trội mà còn mở ra những tiềm năng mới cho toàn bộ hệ sinh thái blockchain, vượt xa phạm vi DeFi. Với thiết kế linh hoạt và tập trung vào tính toàn vẹn và nhất quán của trạng thái toàn cầu, JAM hứa hẹn sẽ trở thành một nền tảng mạnh mẽ cho các ứng dụng Web3 và beyond.
 
@@ -159,7 +295,7 @@ JAM, với kiến trúc sáng tạo và các tính năng bảo mật tiên tiế
 
 ---
 
-# **V. Challenges and Future Directions**
+# **VIII. Challenges and Future Directions**
 
 JAM là một bước tiến lớn trong kiến trúc blockchain, nhưng đi kèm với đó là những thách thức kỹ thuật và nhu cầu nghiên cứu thêm để phát huy hết tiềm năng của nó. Việc đánh giá và cải thiện các giới hạn lý thuyết và thực nghiệm của JAM là cần thiết để đảm bảo tính khả thi và hiệu quả trong các môi trường ứng dụng thực tế.
 
@@ -178,7 +314,7 @@ JAM là một bước tiến lớn trong kiến trúc blockchain, nhưng đi kè
 
 ---
 
-# VI. R**esilience on JAM**
+# IX. R**esilience on JAM**
 
 Khả năng phục hồi (Resilience) là một yếu tố quan trọng đối với bất kỳ hệ thống blockchain nào, đặc biệt là trong môi trường phi tập trung của Web3. JAM được thiết kế để đạt được khả năng phục hồi cao thông qua việc kết hợp một số cơ chế bảo mật và khả năng phục hồi độc đáo.
 
@@ -214,15 +350,38 @@ Khả năng phục hồi (Resilience) là một yếu tố quan trọng đối v
 - **JAM được thiết kế để đảm bảo rằng các validator vẫn có thể hoạt động hiệu quả ngay cả khi có sự cố xảy ra với một số node trong mạng lưới.** Cơ chế đồng thuận của Jam đảm bảo rằng chuỗi khối vẫn có thể hoạt động ngay cả khi một số node bị lỗi hoặc bị tấn công.
 - **JAM có khả năng phục hồi cao (Resilience) bởi vì nó được thiết kế để chống lại các cuộc tấn công và lỗi kỹ thuật.** Các cơ chế bảo mật và khả năng phục hồi của Jam giúp đảm bảo rằng hệ thống có thể hoạt động ổn định và đáng tin cậy trong môi trường phi tập trung.
 
-# Reference
+---
 
-Graypaper: [Graypaper.com](https://graypaper.com/)
+# X. Reference
 
-Polkadot Wiki: [Polkadot Wiki - Learn JAM chain](https://wiki.polkadot.network/docs/learn-jam-chain)
+### Core Documents
 
-- GRANDPA: [Learn Grandpa Concensus](https://wiki.polkadot.network/docs/learn-consensus#finality-gadget-grandpa)
-- Sanfrole: [Learn Safrole](https://wiki.polkadot.network/docs/learn-safrole)
+- **Graypaper**: [Graypaper.com](https://graypaper.com/)
+- **Polkadot Wiki**
+    - [Learn JAM Chain](https://wiki.polkadot.network/docs/learn-jam-chain)
+    - **GRANDPA Consensus**: [Learn GRANDPA](https://wiki.polkadot.network/docs/learn-consensus#finality-gadget-grandpa)
+    - **Sanfrole**: [Learn Sanfrole](https://wiki.polkadot.network/docs/learn-safrole)
 
-Gavin Wood on JAM A-Z:  [sub0 Asia 2024 keynote - Gavin Wood on JAM A-Z](https://www.youtube.com/watch?v=tdvqkKdFTlw)
+### RISC-V Resources
 
-PVM : [Polkavm by koute](https://github.com/koute/polkavm)
+- **What is RISC-V**: [Synopsys Glossary](https://www.synopsys.com/glossary/what-is-risc-v.html)
+- **RISC-V Technical Documentation**: [Berkeley - Documents RISC-V](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-118.pdf)
+
+### PolkaVM and Related Technologies
+
+- **RFC-XXXX: "CoreJam"**: [GitHub - CoreJam RFC](https://github.com/polkadot-fellows/RFCs/blob/006a9ff07c3d3bc5316c6bf63b05e966e694cc2d/text/corejam.md)
+- **PolkaVM by Koute**: [GitHub Repository](https://github.com/koute/polkavm)
+- **PolkaVM Announcement**: [Polkadot Forum - Announcing PolkaVM](https://forum.polkadot.network/t/announcing-polkavm-a-new-risc-v-based-vm-for-smart-contracts-and-possibly-more/3811/5)
+- **ParityTech GitHub - PolkaVM**: [GitHub Repository for PolkaVM](https://github.com/paritytech/polkavm)
+- **Exploring PolkaVM - RISC-V based VM**: [KusamaXi Article](https://kusamaxi.com/post/polkavm-runs-doom)
+- **Hybrid Consensus by OG**:[Hybrid Consensus](https://x.com/openguildwtf/status/1809203505649037391)
+
+### WebAssembly (WASM) and Virtual Machines
+
+- **How WASM Works (Vietnamese)**: [TopDev - WebAssembly](https://topdev.vn/blog/webassembly-tuong-lai-cua-cac-ung-dung-web/)
+- **WebAssembly vs. RISC-V**: [Rabbit Hole Blog](https://www.holeoftherabbit.com/2023/11/05/web-assembly-versus-risc-v-but-why/)
+- **Stack-based vs. Register-based VMs**: [StackOverflow Discussion](https://stackoverflow.com/questions/164143/registers-vs-stacks)
+
+### Talks and Presentations
+
+- **Gavin Wood on JAM A-Z**: [sub0 Asia 2024 keynote](https://www.youtube.com/watch?v=tdvqkKdFTlw)
